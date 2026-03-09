@@ -1,0 +1,28 @@
+# 信用卡欺诈检测系统依赖包
+# Credit Card Fraud Detection System Dependencies
+
+# 数据处理和科学计算
+pandas>=1.5.0
+numpy>=1.21.0
+
+# 机器学习库
+scikit-learn>=1.1.0
+xgboost>=1.6.0
+
+# 数据可视化
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# 数据不平衡处理
+imbalanced-learn>=0.9.0
+
+# GUI界面
+# tkinter是Python标准库，无需额外安装
+
+# 其他工具
+joblib>=1.1.0
+tqdm>=4.64.0
+
+# 可选：Jupyter支持（如果需要在notebook中运行）
+# jupyter>=1.0.0
+# ipykernel>=6.0.0
