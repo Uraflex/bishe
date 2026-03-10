@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore')
 class BayesianOptimizer:
     """贝叶斯优化器，用于XGBoost超参数调优"""
     
-    def __init__(self, max_iter=100, cv_folds=5, random_state=42):
+    def __init__(self, max_iter=20, cv_folds=3, random_state=42):
         """
         初始化贝叶斯优化器
         
@@ -40,16 +40,16 @@ class BayesianOptimizer:
         
         # 定义参数搜索空间
         self.param_bounds = {
-            'n_estimators': (50, 500),
-            'max_depth': (3, 10),
-            'learning_rate': (0.01, 0.3),
-            'subsample': (0.6, 1.0),
-            'colsample_bytree': (0.6, 1.0),
-            'min_child_weight': (1, 10),
-            'gamma': (0, 5),
-            'reg_alpha': (0, 1),
-            'reg_lambda': (0, 1),
-            'scale_pos_weight': (1, 100)
+            'n_estimators': (50, 300),  # 减少范围避免内存问题
+            'max_depth': (3, 8),       # 减少深度范围
+            'learning_rate': (0.01, 0.2),
+            'subsample': (0.7, 1.0),
+            'colsample_bytree': (0.7, 1.0),
+            'min_child_weight': (1, 8),
+            'gamma': (0, 3),
+            'reg_alpha': (0, 0.5),
+            'reg_lambda': (0, 0.5),
+            'scale_pos_weight': (1, 50)  # 大幅减少范围
         }
         
     def objective_function(self, params, X, y):
@@ -81,8 +81,9 @@ class BayesianOptimizer:
             model = xgb.XGBClassifier(
                 **param_dict,
                 random_state=self.random_state,
-                n_jobs=-1,
-                eval_metric='logloss'
+                n_jobs=1,  # 减少并行度避免编码问题
+                eval_metric='logloss',
+                verbosity=0  # 减少输出
             )
             
             # 使用交叉验证评估
@@ -90,7 +91,7 @@ class BayesianOptimizer:
             
             # 计算F1分数
             f1_scorer = make_scorer(f1_score, average='binary')
-            scores = cross_val_score(model, X, y, cv=cv, scoring=f1_scorer, n_jobs=-1)
+            scores = cross_val_score(model, X, y, cv=cv, scoring=f1_scorer, n_jobs=1)
             
             mean_score = np.mean(scores)
             
@@ -109,7 +110,9 @@ class BayesianOptimizer:
             return -mean_score  # 返回负值因为我们要最小化
             
         except Exception as e:
-            print(f"参数评估失败: {e}")
+            # 避免中文输出导致的编码问题
+            error_msg = str(e).encode('ascii', 'ignore').decode('ascii')
+            print(f"Parameter evaluation failed: {error_msg}")
             return 0  # 返回较差的分数
     
     def acquisition_function(self, x, gp):
@@ -235,10 +238,13 @@ class BayesianOptimizer:
             print("-" * 50)
             print(f"优化完成！最佳F1分数: {self.best_score:.6f}")
             print("最佳参数:")
-            for param, value in self.best_params.items():
-                print(f"  {param}: {value}")
+            if self.best_params is not None:
+                for param, value in self.best_params.items():
+                    print(f"  {param}: {value}")
+            else:
+                print("  未找到有效参数")
         
-        return self.best_params
+        return self.best_params if self.best_params is not None else {}
 
 class QLearningOptimizer:
     """Q-Learning优化器，动态调整贝叶斯搜索策略"""
@@ -437,10 +443,13 @@ class HybridOptimizer:
             print("=" * 60)
             print(f"混合优化完成！最佳F1分数: {best_score:.6f}")
             print("最佳参数:")
-            for param, value in best_params.items():
-                print(f"  {param}: {value}")
+            if best_params is not None and isinstance(best_params, dict):
+                for param, value in best_params.items():
+                    print(f"  {param}: {value}")
+            else:
+                print("  未找到有效参数")
         
-        return best_params
+        return best_params if best_params is not None else {}
 
 # 测试函数
 def test_optimizer():

@@ -184,16 +184,24 @@ class EnhancedDataProcessor:
         X_minority = X[minority_mask]
         y_majority = y[majority_mask]
         y_minority = y[minority_mask]
+
+        # 处理NaN值：删除包含NaN的行
+        X_majority = X_majority.dropna()
+        y_majority = y_majority[X_majority.index]
+        X_minority = X_minority.dropna()
+        y_minority = y_minority[X_minority.index]
         
         print(f"原始样本分布 - 正常: {len(X_majority)}, 欺诈: {len(X_minority)}")
         
         # 1. K-Means聚类欠采样（多数类）
-        n_clusters = min(len(X_minority) * target_ratio, len(X_majority))
+        # 减少聚类数量以提高性能
+        n_clusters = min(100, len(X_minority) * target_ratio // 10)  # 大幅减少聚类数
         n_clusters = max(n_clusters, 10)  # 至少10个聚类
         
         print(f"对多数类进行K-Means聚类，聚类数: {n_clusters}")
         
-        kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=10)
+        # 使用更快的K-Means配置
+        kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=5, max_iter=100)
         cluster_labels = kmeans.fit_predict(X_majority)
         
         # 从每个聚类中随机选择样本

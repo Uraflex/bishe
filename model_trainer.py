@@ -25,7 +25,7 @@ class ModelTrainer:
         self.model = None
         self.best_params = None
         
-    def train_xgboost(self, X_train, y_train, use_grid_search=False):
+    def train_xgboost(self, X_train, y_train, use_grid_search=False, **kwargs):
         """
         训练XGBoost分类器
         
@@ -42,6 +42,9 @@ class ModelTrainer:
         if use_grid_search:
             print("使用网格搜索进行超参数调优...")
             model = self._train_with_grid_search(X_train, y_train)
+        elif kwargs:
+            print("使用自定义参数训练模型...")
+            model = self._train_with_custom_params(X_train, y_train, **kwargs)
         else:
             print("使用预设参数训练模型...")
             model = self._train_with_default_params(X_train, y_train)
@@ -87,6 +90,46 @@ class ModelTrainer:
         print(f"- 学习率: {model.learning_rate}")
         print(f"- 最大深度: {model.max_depth}")
         print(f"- 类别权重比例: {model.scale_pos_weight:.2f}")
+        
+        return model
+    
+    def _train_with_custom_params(self, X_train, y_train, **kwargs):
+        """
+        使用自定义参数训练XGBoost模型
+        
+        参数:
+            X_train (pd.DataFrame): 训练特征
+            y_train (pd.Series): 训练标签
+            **kwargs: 自定义参数
+            
+        返回:
+            XGBClassifier: 训练好的模型
+        """
+        # 设置默认参数
+        default_params = {
+            'n_estimators': 200,
+            'learning_rate': 0.1,
+            'max_depth': 4,
+            'subsample': 0.8,
+            'colsample_bytree': 0.8,
+            'random_state': 42,
+            'eval_metric': 'logloss',
+            'scale_pos_weight': self._calculate_scale_pos_weight(y_train),
+            'reg_alpha': 0.1,
+            'reg_lambda': 1.0,
+        }
+        
+        # 合并自定义参数
+        params = {**default_params, **kwargs}
+        
+        # 创建并训练模型
+        model = XGBClassifier(**params)
+        model.fit(X_train, y_train, verbose=False)
+        
+        # 打印使用的参数
+        print("使用的模型参数:")
+        for key, value in params.items():
+            print(f"- {key}: {value}")
         
         return model
     

@@ -25,10 +25,8 @@
 
 ```
 credit_card_fraud_detection/
-├── main.py                      # 命令行主程序（基础版）
-├── gui.py                       # 基础版GUI界面
+├── main.py                      # 命令行主程序
 ├── enhanced_gui.py               # 增强版GUI界面 ⭐
-├── data_processor.py             # 基础数据处理模块
 ├── enhanced_data_processor.py    # 增强数据处理模块 ⭐
 ├── model_trainer.py              # 模型训练模块
 ├── evaluator.py                  # 模型评估模块
@@ -36,8 +34,6 @@ credit_card_fraud_detection/
 ├── hyperparameter_optimizer.py   # 超参数优化模块 ⭐
 ├── model_comparator.py           # 模型对比模块 ⭐
 ├── requirements.txt              # 依赖包列表
-├── start_gui.bat                 # 基础版启动脚本
-├── start_gui.sh                  # 基础版启动脚本
 ├── start_enhanced_gui.bat        # 增强版启动脚本 ⭐
 ├── start_enhanced_gui.sh         # 增强版启动脚本 ⭐
 └── README.md                     # 项目说明文档
@@ -81,9 +77,9 @@ pip install -r requirements.txt
 
 4. **运行程序**
 
-图形界面版本：
+增强版图形界面（推荐）：
 ```bash
-python gui.py
+python enhanced_gui.py
 ```
 
 命令行版本：
@@ -93,15 +89,17 @@ python main.py
 
 ## 📊 核心功能
 
-### 数据处理模块 (`data_processor.py`)
+### 增强数据处理模块 (`enhanced_data_processor.py`)
 - 数据加载和探索性分析
-- 缺失值处理
+- 异常值检测和处理（IQR方法）
+- 高级特征工程（滑动窗口、时间序列、交互特征）
+- 混合采样策略（K-Means欠采样 + SMOTE过采样）
 - 特征缩放和标准化
 - 类别分布分析
-- 异常值检测
 
 ### 模型训练模块 (`model_trainer.py`)
 - XGBoost模型训练
+- 自定义参数支持
 - 超参数调优（网格搜索）
 - 交叉验证
 - 模型保存和加载
@@ -113,6 +111,20 @@ python main.py
 - ROC曲线和AUC计算
 - 特征重要性分析
 - 模型性能比较
+
+### 超参数优化模块 (`hyperparameter_optimizer.py`)
+- 贝叶斯优化算法
+- Q-Learning动态调整
+- 智能参数搜索
+- 交叉验证评估
+- 优化历史追踪
+
+### 模型对比模块 (`model_comparator.py`)
+- 多算法性能对比
+- 消融实验分析
+- 统计显著性检验
+- 结果可视化
+- 性能排名报告
 
 ### 工具函数模块 (`utils.py`)
 - 数据可视化函数
@@ -138,6 +150,9 @@ python main.py
 - **特征重要性条形图**: 显示最重要的特征
 - **类别分布图**: 展示数据不平衡情况
 - **学习曲线**: 分析模型学习过程
+- **模型对比图表**: 多算法性能对比可视化
+- **优化历史追踪**: 超参数优化过程可视化
+- **消融实验结果**: 各模块贡献度分析图表
 
 ## ⚙️ 模型配置
 
@@ -195,7 +210,10 @@ cv_results = trainer.cross_validate_model(X_train, y_train, cv=10)
 - **NumPy**: 数值计算
 - **Scikit-learn**: 机器学习工具包
 - **XGBoost**: 梯度提升算法
+- **Imbalanced-learn**: 数据采样和平衡处理
+- **Scipy**: 科学计算和优化算法
 - **Matplotlib/Seaborn**: 数据可视化
+- **Tkinter**: 图形用户界面
 
 ## 🐛 常见问题
 
