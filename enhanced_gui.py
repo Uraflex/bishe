@@ -21,14 +21,13 @@ import os
 from datetime import datetime
 
 # 导入原有模块
-from data_processor import DataProcessor
+from enhanced_data_processor import EnhancedDataProcessor
 from model_trainer import ModelTrainer
 from evaluator import ModelEvaluator
 from utils import (plot_confusion_matrix, plot_roc_curve, plot_feature_importance,
                    create_summary_report)
 
 # 导入新增模块
-from enhanced_data_processor import EnhancedDataProcessor
 from hyperparameter_optimizer import HybridOptimizer
 from model_comparator import ModelComparator
 
@@ -64,7 +63,7 @@ class EnhancedCreditCardFraudGUI:
         self.ablation_results = None
         
         # 初始化处理器
-        self.processor = DataProcessor()
+        self.processor = EnhancedDataProcessor()
         self.enhanced_processor = EnhancedDataProcessor()
         self.trainer = ModelTrainer()
         self.evaluator = ModelEvaluator()
@@ -249,7 +248,7 @@ class EnhancedCreditCardFraudGUI:
                 
                 # 预处理数据
                 self.update_status("正在预处理数据...")
-                X, y = self.processor.preprocess_data(df)
+                X, y = self.processor.preprocess_data_enhanced(df, use_hybrid_sampling=False, use_advanced_features=False)
                 
                 if X is not None and y is not None:
                     # 分割数据
