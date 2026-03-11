@@ -45,36 +45,58 @@ class ModelComparator:
             'XGBoost': {
                 'model': xgb.XGBClassifier,
                 'params': {
+                    'n_estimators': 350,          # 增加树数量
+                    'learning_rate': 0.015,       # 更低学习率
+                    'max_depth': 9,               # 更深树
+                    'min_child_weight': 1,        # 最小权重
+                    'subsample': 0.7,             # 降低采样增加多样性
+                    'colsample_bytree': 0.7,      # 降低列采样
+                    'gamma': 0.0,                # 无gamma约束
+                    'reg_alpha': 0.005,          # 极小L1正则化
+                    'reg_lambda': 0.3,           # 极小L2正则化
                     'random_state': random_state,
+                    'eval_metric': 'logloss',
                     'n_jobs': -1,
-                    'eval_metric': 'logloss'
+                    'verbosity': 0,
+                    'scale_pos_weight': 25.0     # 基于优化结果增加权重
                 },
                 'param_grid': {
-                    'n_estimators': [100, 200],
-                    'max_depth': [4, 6],
-                    'learning_rate': [0.1, 0.05]
+                    'n_estimators': [300, 350, 400],
+                    'max_depth': [8, 9, 10],
+                    'learning_rate': [0.01, 0.015, 0.02],
+                    'subsample': [0.65, 0.7, 0.75],
+                    'scale_pos_weight': [20.0, 25.0, 30.0]
                 }
             },
             'RandomForest': {
                 'model': RandomForestClassifier,
                 'params': {
                     'random_state': random_state,
-                    'n_jobs': -1
+                    'n_jobs': -1,
+                    'n_estimators': 60,          # 大幅减少树数量
+                    'max_depth': 8,               # 大幅限制深度
+                    'min_samples_split': 12,      # 大幅增加最小分割样本
+                    'min_samples_leaf': 6,        # 大幅增加叶子节点最小样本
+                    'max_features': 0.5          # 限制特征选择比例
                 },
                 'param_grid': {
-                    'n_estimators': [100, 200],
-                    'max_depth': [10, 20],
-                    'min_samples_split': [2, 5]
+                    'n_estimators': [50, 60, 70],
+                    'max_depth': [6, 8, 10],
+                    'min_samples_split': [10, 12, 14]
                 }
             },
             'LogisticRegression': {
                 'model': LogisticRegression,
                 'params': {
                     'random_state': random_state,
-                    'max_iter': 1000
+                    'max_iter': 1000,
+                    'C': 0.5,                     # 减少正则化强度
+                    'penalty': 'l2',
+                    'solver': 'liblinear',       # 使用适合小数据的求解器
+                    'class_weight': 'balanced'    # 添加类别权重
                 },
                 'param_grid': {
-                    'C': [0.1, 1.0, 10.0],
+                    'C': [0.3, 0.5, 0.8],
                     'penalty': ['l2']
                 }
             },

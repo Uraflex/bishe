@@ -12,6 +12,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')  # 设置matplotlib后端
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -184,6 +186,20 @@ class EnhancedCreditCardFraudGUI:
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
+    def switch_to_plot_tab(self):
+        """安全地切换到图表选项卡"""
+        try:
+            # 获取选项卡总数
+            tab_count = len(self.notebook.tabs())
+            # 图表选项卡总是最后一个（索引从0开始）
+            plot_tab_index = tab_count - 1
+            # 确保索引有效
+            if 0 <= plot_tab_index < tab_count:
+                self.notebook.select(plot_tab_index)
+        except Exception as e:
+            # 如果切换失败，静默处理不影响绘图
+            pass
+    
     def browse_file(self):
         """浏览文件对话框"""
         filename = filedialog.askopenfilename(
@@ -635,7 +651,7 @@ class EnhancedCreditCardFraudGUI:
             
         try:
             self.figure.clear()
-            ax = self.figure.add_subplot(111)
+            ax = self.figure.add_subplot(1, 1, 1)
             
             cm = self.evaluation_results['confusion_matrix']
             
@@ -655,7 +671,7 @@ class EnhancedCreditCardFraudGUI:
             ax.set_yticklabels(tick_labels)
             
             self.canvas.draw()
-            self.notebook.select(4)  # 切换到图表标签页
+            self.switch_to_plot_tab()  # 安全切换到图表标签页
             
         except Exception as e:
             messagebox.showerror("错误", f"绘制混淆矩阵失败: {str(e)}")
@@ -668,7 +684,7 @@ class EnhancedCreditCardFraudGUI:
             
         try:
             self.figure.clear()
-            ax = self.figure.add_subplot(111)
+            ax = self.figure.add_subplot(1, 1, 1)
             
             fpr = self.evaluation_results['fpr']
             tpr = self.evaluation_results['tpr']
@@ -691,7 +707,7 @@ class EnhancedCreditCardFraudGUI:
             ax.grid(True, alpha=0.3)
             
             self.canvas.draw()
-            self.notebook.select(4)  # 切换到图表标签页
+            self.switch_to_plot_tab()  # 安全切换到图表标签页
             
         except Exception as e:
             messagebox.showerror("错误", f"绘制ROC曲线失败: {str(e)}")
@@ -704,7 +720,7 @@ class EnhancedCreditCardFraudGUI:
             
         try:
             self.figure.clear()
-            ax = self.figure.add_subplot(111)
+            ax = self.figure.add_subplot(1, 1, 1)
             
             # 选择前15个最重要的特征
             top_features = self.feature_importance_df.head(15)
@@ -731,7 +747,7 @@ class EnhancedCreditCardFraudGUI:
             ax.grid(True, alpha=0.3, axis='x')
             
             self.canvas.draw()
-            self.notebook.select(4)  # 切换到图表标签页
+            self.switch_to_plot_tab()  # 安全切换到图表标签页
             
         except Exception as e:
             messagebox.showerror("错误", f"绘制特征重要性失败: {str(e)}")
@@ -756,8 +772,8 @@ class EnhancedCreditCardFraudGUI:
                 model_names.append(row['Model'])
             
             # 创建子图
-            ax1 = self.figure.add_subplot(121)
-            ax2 = self.figure.add_subplot(122)
+            ax1 = self.figure.add_subplot(1, 2, 1)
+            ax2 = self.figure.add_subplot(1, 2, 2)
             
             # 子图1：F1分数对比
             bars1 = ax1.bar(model_names, f1_scores, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
@@ -792,9 +808,10 @@ class EnhancedCreditCardFraudGUI:
             # 旋转x轴标签
             ax2.tick_params(axis='x', rotation=45)
             
-            self.figure.tight_layout()
+            # 使用subplots_adjust替代tight_layout避免布局冲突
+            self.figure.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.15, wspace=0.3)
             self.canvas.draw()
-            self.notebook.select(4)  # 切换到图表标签页
+            self.switch_to_plot_tab()  # 安全切换到图表标签页
             
         except Exception as e:
             messagebox.showerror("错误", f"绘制对比结果失败: {str(e)}")

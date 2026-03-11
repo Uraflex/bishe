@@ -26,21 +26,24 @@
 ```
 credit_card_fraud_detection/
 ├── main.py                      # 命令行主程序
-├── enhanced_gui.py              # 增强版GUI界面 ⭐ (34KB)
+├── enhanced_gui.py              # 增强版GUI界面 ⭐ (36KB)
 ├── enhanced_data_processor.py   # 增强数据处理模块 ⭐ (14KB)
 ├── model_trainer.py             # 模型训练模块 (11KB)
 ├── evaluator.py                 # 模型评估模块 (11KB)
 ├── utils.py                     # 工具函数模块 (11KB)
-├── hyperparameter_optimizer.py  # 超参数优化模块 ⭐ (17KB)
-├── model_comparator.py          # 模型对比模块 ⭐ (16KB)
+├── hyperparameter_optimizer.py  # 超参数优化模块 ⭐ (18KB)
+├── model_comparator.py          # 模型对比模块 ⭐ (18KB)
+├── xgboost_optimizer.py         # XGBoost参数优化器 (7KB)
 ├── requirements.txt              # 依赖包列表
 ├── start_enhanced_gui.bat       # Windows启动脚本 ⭐
+├── run_simple.bat               # 简易启动脚本
 ├── start_enhanced_gui.sh        # Linux/Mac启动脚本 ⭐
-├── xgboost_fraud_detection_model.pkl  # 预训练模型文件 (318KB)
+├── xgboost_fraud_detection_model.pkl  # 预训练模型文件 (214KB)
 └── README.md                    # 项目说明文档
 ```
 
-> ⭐ 标记的文件为增强版核心功能模块
+> ⭐ 标记的文件为增强版核心功能模块  
+> 📁 项目已优化结构，删除冗余测试文件，保持代码整洁
 
 ## �️ GUI界面功能
 
@@ -259,12 +262,20 @@ cv_results = trainer.cross_validate_model(X_train, y_train, cv=10)
 
 ## 🐛 常见问题
 
-### 1. 数据集下载问题
+### 1. 可视化报错修复 ✅ (v2.1已修复)
+**问题**: "Slave index 4 out of bounds"错误
+**解决方案**: 
+- 修复了matplotlib子图创建参数格式
+- 优化了notebook选项卡切换逻辑
+- 添加了安全的选项卡切换方法
+- 现在所有可视化功能都能正常工作，无错误提示
+
+### 2. 数据集下载问题
 - 确保从Kaggle下载完整的数据集
 - 文件名应为 `creditcard.csv`
 - 检查文件路径是否正确
 
-### 2. 依赖包安装问题
+### 3. 依赖包安装问题
 ```bash
 # 如果遇到依赖冲突，建议使用虚拟环境
 python -m venv fraud_detection_env
@@ -274,7 +285,7 @@ fraud_detection_env\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-### 3. 内存不足
+### 4. 内存不足
 - 数据集较大，建议至少8GB内存
 - 可以减少 `n_estimators` 参数来降低内存使用
 
@@ -294,12 +305,20 @@ pip install -r requirements.txt
 
 ## 📅 版本信息
 
-- **当前版本**: v2.0 Enhanced Edition
-- **更新日期**: 2026年3月10日
+- **当前版本**: v2.1 Enhanced Edition
+- **更新日期**: 2026年3月11日
 - **作者**: 毕业设计项目组
 - **适用范围**: 毕业设计开题报告、学术研究、机器学习教学
 
 ## 🔄 更新日志
+
+### v2.1 Enhanced Edition (2026-03-11)
+- 🐛 **修复可视化报错**: 彻底解决"Slave index 4 out of bounds"错误
+- 🎯 **XGBoost性能优化**: 基于消融实验数据优化参数，F1分数显著提升
+- ⚙️ **模型参数调优**: 优化XGBoost、RandomForest、LogisticRegression参数配置
+- 🧹 **代码清理**: 删除冗余测试文件，优化项目结构
+- 📊 **性能提升**: XGBoost在F1分数、召回率、AUC等关键指标上超越其他模型
+- 🔧 **参数边界修复**: 修复hyperparameter_optimizer中的参数越界问题
 
 ### v2.0 Enhanced Edition (2026-03-10)
 - ✨ 新增增强版GUI界面，支持完整功能操作

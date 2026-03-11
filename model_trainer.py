@@ -10,11 +10,17 @@
 
 import pickle
 import numpy as np
-import pandas as pd
-from xgboost import XGBClassifier
-from sklearn.model_selection import GridSearchCV, cross_val_score
-from sklearn.metrics import make_scorer, f1_score
 import warnings
+import xgboost as xgb
+from xgboost import XGBClassifier
+import pandas as pd
+import numpy as np
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.model_selection import cross_val_score
+import joblib
+import os
+from datetime import datetime
+from xgboost_optimizer import XGBoostOptimizer
 warnings.filterwarnings('ignore')
 
 class ModelTrainer:
@@ -24,6 +30,7 @@ class ModelTrainer:
         """初始化模型训练器"""
         self.model = None
         self.best_params = None
+        self.optimizer = XGBoostOptimizer()  # 初始化XGBoost优化器
         
     def train_xgboost(self, X_train, y_train, use_grid_search=False, **kwargs):
         """
@@ -56,7 +63,7 @@ class ModelTrainer:
     
     def _train_with_default_params(self, X_train, y_train):
         """
-        使用默认参数训练XGBoost模型
+        使用优化参数训练XGBoost模型
         
         参数:
             X_train (pd.DataFrame): 训练特征
@@ -65,31 +72,21 @@ class ModelTrainer:
         返回:
             XGBClassifier: 训练好的模型
         """
-        # 针对不平衡数据集的XGBoost参数配置
-        model = XGBClassifier(
-            n_estimators=200,          # 树的数量
-            learning_rate=0.1,         # 学习率
-            max_depth=4,               # 树的最大深度
-            subsample=0.8,            # 子采样比例
-            colsample_bytree=0.8,     # 列采样比例
-            random_state=42,           # 随机种子
-            eval_metric='logloss',     # 评估指标
-            # 处理不平衡数据的关键参数
-            scale_pos_weight=self._calculate_scale_pos_weight(y_train),
-            # 正则化参数防止过拟合
-            reg_alpha=0.1,             # L1正则化
-            reg_lambda=1.0,           # L2正则化
-        )
+        # 使用优化器获取最佳实践配置
+        model = self.optimizer.get_optimized_model(X_train, y_train, model_type='best_practice')
         
         # 训练模型
         model.fit(X_train, y_train, verbose=False)
         
         # 打印模型参数
-        print(f"模型参数配置:")
+        print(f"使用的模型参数:")
         print(f"- 树的数量: {model.n_estimators}")
         print(f"- 学习率: {model.learning_rate}")
         print(f"- 最大深度: {model.max_depth}")
-        print(f"- 类别权重比例: {model.scale_pos_weight:.2f}")
+        print(f"- 子采样比例: {model.subsample}")
+        print(f"- 列采样比例: {model.colsample_bytree}")
+        print(f"- 类别权重比例: {model.scale_pos_weight}")
+        print(f"- 正则化参数: reg_alpha={model.reg_alpha}, reg_lambda={model.reg_lambda}")
         
         return model
     

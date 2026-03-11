@@ -10,6 +10,8 @@
 
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # 设置为非交互式后端
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
@@ -20,7 +22,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # 导入自定义模块
-from data_processor import DataProcessor
+from enhanced_data_processor import EnhancedDataProcessor
 from model_trainer import ModelTrainer
 from evaluator import ModelEvaluator
 from utils import plot_confusion_matrix, plot_roc_curve, plot_feature_importance
@@ -42,17 +44,20 @@ def main():
     print("-" * 40)
     
     # 初始化数据处理器
-    processor = DataProcessor()
+    processor = EnhancedDataProcessor()
     
     # 加载数据集
     df = processor.load_data(r"d:\我的文档\Desktop\11\creditcard.csv")
     print(f"数据集形状: {df.shape}")
     
     # 数据探索
-    processor.explore_data(df)
+    print(f"数据集基本信息:")
+    print(f"- 总记录数: {len(df)}")
+    print(f"- 特征数: {df.shape[1]}")
+    print(f"- 缺失值: {df.isnull().sum().sum()}")
     
     # 数据预处理
-    X, y = processor.preprocess_data(df)
+    X, y = processor.preprocess_data_enhanced(df)
     print(f"特征矩阵形状: {X.shape}")
     print(f"目标变量形状: {y.shape}")
     
@@ -113,18 +118,27 @@ def main():
     print("\n6. 结果可视化")
     print("-" * 40)
     
-    # 绘制混淆矩阵
+    # 绘制并保存混淆矩阵
     plot_confusion_matrix(cm, "混淆矩阵")
+    plt.savefig("confusion_matrix.png", dpi=300, bbox_inches='tight')
+    plt.close()
+    print("✓ 混淆矩阵已保存为 confusion_matrix.png")
     
-    # 绘制ROC曲线
+    # 绘制并保存ROC曲线
     plot_roc_curve(fpr, tpr, roc_auc, "ROC曲线")
+    plt.savefig("roc_curve.png", dpi=300, bbox_inches='tight')
+    plt.close()
+    print("✓ ROC曲线已保存为 roc_curve.png")
     
     # 特征重要性分析
     feature_names = X.columns.tolist()
     feature_importance = evaluator.get_feature_importance(model, feature_names)
     
-    # 绘制特征重要性
+    # 绘制并保存特征重要性
     plot_feature_importance(feature_importance, "特征重要性排名")
+    plt.savefig("feature_importance.png", dpi=300, bbox_inches='tight')
+    plt.close()
+    print("✓ 特征重要性图已保存为 feature_importance.png")
     
     # 7. 输出重要结果
     print("\n7. 重要结果总结")

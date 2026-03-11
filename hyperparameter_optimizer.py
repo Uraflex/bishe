@@ -43,12 +43,12 @@ class BayesianOptimizer:
             'n_estimators': (50, 300),  # 减少范围避免内存问题
             'max_depth': (3, 8),       # 减少深度范围
             'learning_rate': (0.01, 0.2),
-            'subsample': (0.7, 1.0),
-            'colsample_bytree': (0.7, 1.0),
+            'subsample': (0.6, 1.0),
+            'colsample_bytree': (0.6, 1.0),  # 确保不超过1.0
             'min_child_weight': (1, 8),
             'gamma': (0, 3),
-            'reg_alpha': (0, 0.5),
-            'reg_lambda': (0, 0.5),
+            'reg_alpha': (0, 1.0),      # 扩大正则化范围
+            'reg_lambda': (0.5, 2.0),   # 扩大正则化范围
             'scale_pos_weight': (1, 50)  # 大幅减少范围
         }
         
@@ -75,6 +75,15 @@ class BayesianOptimizer:
                     param_dict[param_name] = int(round(params[i]))
                 else:
                     param_dict[param_name] = params[i]
+        
+        # 参数边界检查
+        param_dict['colsample_bytree'] = np.clip(param_dict['colsample_bytree'], 0.1, 1.0)
+        param_dict['subsample'] = np.clip(param_dict['subsample'], 0.1, 1.0)
+        param_dict['learning_rate'] = np.clip(param_dict['learning_rate'], 0.001, 1.0)
+        param_dict['gamma'] = max(0, param_dict['gamma'])
+        param_dict['reg_alpha'] = max(0, param_dict['reg_alpha'])
+        param_dict['reg_lambda'] = max(0, param_dict['reg_lambda'])
+        param_dict['scale_pos_weight'] = max(0.1, param_dict['scale_pos_weight'])
         
         try:
             # 创建XGBoost模型
