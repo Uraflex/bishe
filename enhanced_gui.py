@@ -568,10 +568,10 @@ class EnhancedCreditCardFraudGUI:
                 compare_text += str(self.comparison_results.to_string(index=False))
                 
                 # 获取最佳模型
-                best_model_name, best_model, best_score = self.comparator.get_best_model('f1')
+                best_model_name, best_model, best_score = self.comparator.get_best_model('auc')
                 if best_model_name:
                     compare_text += f"\n\n🏆 最佳模型: {best_model_name}"
-                    compare_text += f"\n📊 最佳F1分数: {best_score:.6f}"
+                    compare_text += f"\n📊 最佳AUC分数: {best_score:.6f}"
                 
                 self.compare_text.insert(tk.END, compare_text)
                 self.update_status("模型对比完成")

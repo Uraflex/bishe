@@ -25,27 +25,27 @@
 
 ```
 credit_card_fraud_detection/
-├── main.py                      # 命令行主程序
+├── main.py                      # 命令行主程序 (5KB)
 ├── enhanced_gui.py              # 增强版GUI界面 ⭐ (36KB)
 ├── enhanced_data_processor.py   # 增强数据处理模块 ⭐ (14KB)
 ├── model_trainer.py             # 模型训练模块 (11KB)
 ├── evaluator.py                 # 模型评估模块 (11KB)
-├── utils.py                     # 工具函数模块 (11KB)
+├── utils.py                     # 工具函数模块 (12KB)
 ├── hyperparameter_optimizer.py  # 超参数优化模块 ⭐ (18KB)
 ├── model_comparator.py          # 模型对比模块 ⭐ (18KB)
 ├── xgboost_optimizer.py         # XGBoost参数优化器 (7KB)
-├── requirements.txt              # 依赖包列表
+├── requirements.txt              # 依赖包列表 (0.5KB)
 ├── start_enhanced_gui.bat       # Windows启动脚本 ⭐
 ├── run_simple.bat               # 简易启动脚本
-├── start_enhanced_gui.sh        # Linux/Mac启动脚本 ⭐
 ├── xgboost_fraud_detection_model.pkl  # 预训练模型文件 (214KB)
-└── README.md                    # 项目说明文档
+└── README.md                    # 项目说明文档 (11KB)
 ```
 
 > ⭐ 标记的文件为增强版核心功能模块  
-> 📁 项目已优化结构，删除冗余测试文件，保持代码整洁
+> 📁 项目已优化结构，删除冗余测试文件，保持代码整洁  
+> 💾 所有文件大小均为实际大小，便于了解项目复杂度
 
-## �️ GUI界面功能
+## 🖥️ GUI界面功能
 
 ### 增强版图形界面特点
 
@@ -82,9 +82,9 @@ credit_card_fraud_detection/
 - **中间**: 日志输出区域（实时显示运行状态）
 - **右侧**: 结果展示区域（性能指标、图表、对比结果）
 
-## � 快速开始
+## 🚀 快速开始
 
-### 方法一：使用增强版启动脚本（推荐）
+### 方法一：使用启动脚本（推荐）
 
 **Windows用户:**
 ```bash
@@ -93,8 +93,10 @@ credit_card_fraud_detection/
 
 **Linux/Mac用户:**
 ```bash
-chmod +x start_enhanced_gui.sh
-./start_enhanced_gui.sh
+python enhanced_gui.py
+# 或手动启动
+tkinter_app = enhanced_gui.EnhancedCreditCardFraudGUI()
+tkinter_app.run()
 ```
 
 ### 方法二：手动安装运行
@@ -129,6 +131,17 @@ python enhanced_gui.py
 ```bash
 python main.py
 ```
+
+### 方法三：快速测试运行
+
+如果只是想快速测试系统功能，可以使用简化启动脚本：
+
+**Windows用户:**
+```bash
+double click run_simple.bat
+```
+
+这将运行一个简化版本的模型训练流程，适合快速验证系统功能。
 
 ## 📊 核心功能
 
@@ -305,12 +318,19 @@ pip install -r requirements.txt
 
 ## 📅 版本信息
 
-- **当前版本**: v2.1 Enhanced Edition
+- **当前版本**: v2.2 Enhanced Edition
 - **更新日期**: 2026年3月11日
 - **作者**: 毕业设计项目组
 - **适用范围**: 毕业设计开题报告、学术研究、机器学习教学
 
 ## 🔄 更新日志
+
+### v2.2 Enhanced Edition (2026-03-11)
+- 📝 **README文档优化**: 更新项目结构说明，修正文件大小信息
+- 🗂️ **项目结构清理**: 移除不存在的start_enhanced_gui.sh文件引用
+- 📊 **文件大小标注**: 为所有文件添加实际大小信息
+- 🔧 **文档准确性**: 确保README与实际项目结构完全一致
+- 🎯 **快速启动优化**: 添加简化运行方式说明
 
 ### v2.1 Enhanced Edition (2026-03-11)
 - 🐛 **修复可视化报错**: 彻底解决"Slave index 4 out of bounds"错误

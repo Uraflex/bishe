@@ -73,7 +73,7 @@ class ModelComparator:
                 'params': {
                     'random_state': random_state,
                     'n_jobs': -1,
-                    'n_estimators': 60,          # 大幅减少树数量
+                    'n_estimators': 50,          # 大幅减少树数量
                     'max_depth': 8,               # 大幅限制深度
                     'min_samples_split': 12,      # 大幅增加最小分割样本
                     'min_samples_leaf': 6,        # 大幅增加叶子节点最小样本
@@ -408,29 +408,29 @@ class ModelComparator:
             report.append("模型性能对比详细报告")
             report.append("=" * 80)
             
-            report.append("\n📊 性能排名:")
+            report.append("\n📊 性能排名 (按AUC排序):")
             
-            # 按F1分数排序
+            # 按AUC分数排序
             sorted_results = self.comparison_results.copy()
             
-            # 提取F1分数用于排序
-            f1_scores = []
+            # 提取AUC分数用于排序
+            auc_scores = []
             for idx, row in sorted_results.iterrows():
-                f1_str = row['F1-Score']
-                f1_score = float(f1_str.split(' ± ')[0])
-                f1_scores.append(f1_score)
+                auc_str = row['AUC']
+                auc_score = float(auc_str.split(' ± ')[0])
+                auc_scores.append(auc_score)
             
-            sorted_results['F1_Score_Num'] = f1_scores
-            sorted_results = sorted_results.sort_values('F1_Score_Num', ascending=False)
+            sorted_results['AUC_Score_Num'] = auc_scores
+            sorted_results = sorted_results.sort_values('AUC_Score_Num', ascending=False)
             
             for i, (idx, row) in enumerate(sorted_results.iterrows(), 1):
-                report.append(f"{i}. {row['Model']} - F1: {row['F1-Score']}")
+                report.append(f"{i}. {row['Model']} - AUC: {row['AUC']}")
             
             report.append("\n🎯 最佳模型分析:")
-            best_model_name, best_model, best_score = self.get_best_model('f1')
+            best_model_name, best_model, best_score = self.get_best_model('auc')
             if best_model_name:
                 report.append(f"最佳模型: {best_model_name}")
-                report.append(f"最佳F1分数: {best_score:.6f}")
+                report.append(f"最佳AUC分数: {best_score:.6f}")
                 
                 # 获取最佳模型的详细参数
                 if best_model_name in self.results:
