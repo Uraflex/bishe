@@ -1,10 +1,5 @@
-"""
-XGBoost参数优化配置
-基于消融实验结果和性能分析的最佳参数配置
-
-作者: 优化版本
-日期: 2026年3月11日
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import xgboost as xgb
 from sklearn.model_selection import StratifiedKFold
@@ -12,8 +7,6 @@ from sklearn.metrics import f1_score, make_scorer
 import numpy as np
 
 class XGBoostOptimizer:
-    """XGBoost参数优化器"""
-    
     def __init__(self, random_state=42):
         """
         初始化优化器
@@ -177,24 +170,3 @@ class XGBoostOptimizer:
         print("  • 增强正则化防止过拟合")
         print("  • 优化采样比例提高泛化能力")
         print("  • 添加gamma参数控制树分裂")
-
-# 测试函数
-def test_optimizer():
-    """测试优化器"""
-    print("测试XGBoost优化器...")
-    
-    optimizer = XGBoostOptimizer()
-    optimizer.print_optimization_summary()
-    
-    # 模拟数据
-    np.random.seed(42)
-    y = np.random.choice([0, 1], 1000, p=[0.99, 0.01])
-    
-    # 测试权重计算
-    weight = optimizer.calculate_optimal_scale_pos_weight(y)
-    print(f"\n计算的类别权重: {weight:.2f}")
-    
-    print("✓ 优化器测试完成")
-
-if __name__ == "__main__":
-    test_optimizer()

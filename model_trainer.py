@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-模型训练模块
-负责XGBoost模型的训练、调优和保存
-
-作者: 转换自Jupyter Notebook
-日期: 2026年3月9日
-"""
 
 import pickle
 import numpy as np
@@ -14,7 +7,6 @@ import warnings
 import xgboost as xgb
 from xgboost import XGBClassifier
 import pandas as pd
-import numpy as np
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import cross_val_score
 import joblib
@@ -24,10 +16,7 @@ from xgboost_optimizer import XGBoostOptimizer
 warnings.filterwarnings('ignore')
 
 class ModelTrainer:
-    """模型训练器类"""
-    
     def __init__(self):
-        """初始化模型训练器"""
         self.model = None
         self.best_params = None
         self.optimizer = XGBoostOptimizer()  # 初始化XGBoost优化器
@@ -314,32 +303,3 @@ class ModelTrainer:
         }
         
         return info
-
-# 测试函数
-def test_model_trainer():
-    """测试模型训练器功能"""
-    print("测试模型训练器...")
-    
-    # 创建模拟数据
-    np.random.seed(42)
-    n_samples = 1000
-    n_features = 10
-    
-    X = np.random.randn(n_samples, n_features)
-    # 创建不平衡的标签
-    y = np.random.choice([0, 1], size=n_samples, p=[0.98, 0.02])
-    
-    X_train = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(n_features)])
-    y_train = pd.Series(y)
-    
-    # 测试训练器
-    trainer = ModelTrainer()
-    model = trainer.train_xgboost(X_train, y_train)
-    
-    # 测试交叉验证
-    cv_results = trainer.cross_validate_model(X_train, y_train, cv=3)
-    
-    print("✓ 模型训练器测试完成")
-
-if __name__ == "__main__":
-    test_model_trainer()

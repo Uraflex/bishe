@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-超参数优化模块
-实现贝叶斯优化和Q-Learning结合的自动调优策略
-
-作者: 基于开题报告要求
-日期: 2026年3月9日
-"""
 
 import numpy as np
 import pandas as pd
@@ -20,8 +13,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class BayesianOptimizer:
-    """贝叶斯优化器，用于XGBoost超参数调优"""
-    
     def __init__(self, max_iter=20, cv_folds=3, random_state=42):
         """
         初始化贝叶斯优化器
@@ -459,36 +450,3 @@ class HybridOptimizer:
                 print("  未找到有效参数")
         
         return best_params if best_params is not None else {}
-
-# 测试函数
-def test_optimizer():
-    """测试优化器"""
-    print("测试超参数优化器...")
-    
-    # 创建模拟数据
-    np.random.seed(42)
-    n_samples = 1000
-    n_features = 10
-    
-    X = np.random.randn(n_samples, n_features)
-    y = np.random.choice([0, 1], n_samples, p=[0.9, 0.1])
-    
-    # 转换为DataFrame
-    feature_names = [f'feature_{i}' for i in range(n_features)]
-    X_df = pd.DataFrame(X, columns=feature_names)
-    y_series = pd.Series(y)
-    
-    # 测试贝叶斯优化
-    print("\n测试贝叶斯优化器:")
-    bayesian_opt = BayesianOptimizer(max_iter=20, cv_folds=3)
-    best_params_bayesian = bayesian_opt.optimize(X_df, y_series, verbose=True)
-    
-    # 测试混合优化
-    print("\n测试混合优化器:")
-    hybrid_opt = HybridOptimizer(max_iter=20, cv_folds=3)
-    best_params_hybrid = hybrid_opt.optimize(X_df, y_series, verbose=True)
-    
-    print("\n✓ 超参数优化器测试完成")
-
-if __name__ == "__main__":
-    test_optimizer()

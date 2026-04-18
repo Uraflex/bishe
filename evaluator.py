@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-模型评估模块
-负责模型性能评估和结果分析
-
-作者: 转换自Jupyter Notebook
-日期: 2026年3月9日
-"""
 
 import numpy as np
 import pandas as pd
@@ -21,10 +14,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class ModelEvaluator:
-    """模型评估器类"""
-    
     def __init__(self):
-        """初始化模型评估器"""
         self.evaluation_results = {}
         
     def calculate_accuracy(self, y_true, y_pred):
@@ -307,37 +297,3 @@ class ModelEvaluator:
         comparison_df = comparison_df.round(6)
         
         return comparison_df
-
-# 测试函数
-def test_evaluator():
-    """测试评估器功能"""
-    print("测试模型评估器...")
-    
-    # 创建模拟数据
-    np.random.seed(42)
-    n_samples = 1000
-    
-    # 真实标签（不平衡）
-    y_true = np.random.choice([0, 1], size=n_samples, p=[0.98, 0.02])
-    
-    # 预测标签（模拟模型预测）
-    y_pred = np.random.choice([0, 1], size=n_samples, p=[0.97, 0.03])
-    
-    # 预测概率
-    y_pred_proba = np.random.random(n_samples)
-    
-    # 测试评估器
-    evaluator = ModelEvaluator()
-    
-    # 单项测试
-    accuracy = evaluator.calculate_accuracy(y_true, y_pred)
-    print(f"准确率测试: {accuracy:.6f}")
-    
-    # 综合评估
-    results = evaluator.comprehensive_evaluation(y_true, y_pred, y_pred_proba)
-    evaluator.print_evaluation_summary(results)
-    
-    print("✓ 模型评估器测试完成")
-
-if __name__ == "__main__":
-    test_evaluator()

@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-模型性能对比模块
-实现多种算法的性能对比和消融实验
-
-作者: 基于开题报告要求
-日期: 2026年3月9日
-"""
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
                            f1_score, roc_auc_score, classification_report, 
-                           confusion_matrix, roc_curve)
+                           confusion_matrix, roc_curve, average_precision_score)
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -24,8 +17,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class ModelComparator:
-    """模型性能对比器"""
-    
     def __init__(self, cv_folds=5, random_state=42):
         """
         初始化模型对比器
@@ -45,27 +36,27 @@ class ModelComparator:
             'XGBoost': {
                 'model': xgb.XGBClassifier,
                 'params': {
-                    'n_estimators': 350,          # 增加树数量
-                    'learning_rate': 0.015,       # 更低学习率
-                    'max_depth': 9,               # 更深树
-                    'min_child_weight': 1,        # 最小权重
-                    'subsample': 0.7,             # 降低采样增加多样性
-                    'colsample_bytree': 0.7,      # 降低列采样
-                    'gamma': 0.0,                # 无gamma约束
-                    'reg_alpha': 0.005,          # 极小L1正则化
-                    'reg_lambda': 0.3,           # 极小L2正则化
+                    'n_estimators': 100,          # 减少树数量
+                    'learning_rate': 0.1,          # 提高学习率
+                    'max_depth': 4,                # 限制深度
+                    'min_child_weight': 5,         # 增加最小权重
+                    'subsample': 0.8,              # 适中的采样比例
+                    'colsample_bytree': 0.8,       # 适中的列采样
+                    'gamma': 0.5,                  # 添加gamma约束
+                    'reg_alpha': 0.1,               # 增加L1正则化
+                    'reg_lambda': 1.0,             # 增加L2正则化
                     'random_state': random_state,
                     'eval_metric': 'logloss',
                     'n_jobs': -1,
                     'verbosity': 0,
-                    'scale_pos_weight': 25.0     # 基于优化结果增加权重
+                    'scale_pos_weight': 3.0        # 降低类别权重
                 },
                 'param_grid': {
-                    'n_estimators': [300, 350, 400],
-                    'max_depth': [8, 9, 10],
-                    'learning_rate': [0.01, 0.015, 0.02],
-                    'subsample': [0.65, 0.7, 0.75],
-                    'scale_pos_weight': [20.0, 25.0, 30.0]
+                    'n_estimators': [80, 100, 120],
+                    'max_depth': [3, 4, 5],
+                    'learning_rate': [0.05, 0.1, 0.15],
+                    'subsample': [0.7, 0.8, 0.9],
+                    'scale_pos_weight': [2.0, 3.0, 4.0]
                 }
             },
             'RandomForest': {
@@ -73,16 +64,19 @@ class ModelComparator:
                 'params': {
                     'random_state': random_state,
                     'n_jobs': -1,
-                    'n_estimators': 50,          # 大幅减少树数量
-                    'max_depth': 8,               # 大幅限制深度
-                    'min_samples_split': 12,      # 大幅增加最小分割样本
-                    'min_samples_leaf': 6,        # 大幅增加叶子节点最小样本
-                    'max_features': 0.5          # 限制特征选择比例
+                    'n_estimators': 20,          # 进一步减少树数量
+                    'max_depth': 4,               # 进一步限制深度
+                    'min_samples_split': 20,      # 增加最小分割样本
+                    'min_samples_leaf': 10,       # 增加叶子节点最小样本
+                    'max_features': 0.3,          # 进一步限制特征选择比例
+                    'bootstrap': True,            # 使用bootstrap采样
+                    'oob_score': True             # 使用袋外评分
                 },
                 'param_grid': {
-                    'n_estimators': [50, 60, 70],
-                    'max_depth': [6, 8, 10],
-                    'min_samples_split': [10, 12, 14]
+                    'n_estimators': [15, 20, 25],
+                    'max_depth': [3, 4, 5],
+                    'min_samples_split': [15, 20, 25],
+                    'max_features': [0.2, 0.3, 0.4]
                 }
             },
             'LogisticRegression': {
@@ -154,17 +148,54 @@ class ModelComparator:
         # 交叉验证
         cv = StratifiedKFold(n_splits=self.cv_folds, shuffle=True, random_state=self.random_state)
         
-        # 计算各项指标
+        # 计算各项指标 - 使用更合适的scoring方式
         accuracy_scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
         precision_scores = cross_val_score(model, X, y, cv=cv, scoring='precision')
         recall_scores = cross_val_score(model, X, y, cv=cv, scoring='recall')
         f1_scores = cross_val_score(model, X, y, cv=cv, scoring='f1')
         
-        # ROC AUC需要特殊处理
+        # ROC AUC和PR AUC需要特殊处理 - 使用更准确的方法
+        auc_scores = []
+        pr_auc_scores = []
+        for train_idx, test_idx in cv.split(X, y):
+            X_train_fold, X_test_fold = X.iloc[train_idx], X.iloc[test_idx]
+            y_train_fold, y_test_fold = y.iloc[train_idx], y.iloc[test_idx]
+            
+            # 训练模型
+            fold_model = model_def['model'](**model_params)
+            fold_model.fit(X_train_fold, y_train_fold)
+            
+            # 预测概率
+            if hasattr(fold_model, 'predict_proba'):
+                y_pred_proba = fold_model.predict_proba(X_test_fold)[:, 1]
+            else:
+                # 对于不支持概率的模型，使用决策函数
+                y_pred_proba = fold_model.decision_function(X_test_fold)
+                # 如果是二维数组，取第二列
+                if len(y_pred_proba.shape) > 1:
+                    y_pred_proba = y_pred_proba[:, 1]
+                # 标准化到[0,1]范围
+                y_pred_proba = (y_pred_proba - y_pred_proba.min()) / (y_pred_proba.max() - y_pred_proba.min() + 1e-8)
+            
+            # 计算ROC AUC
+            try:
+                fold_auc = roc_auc_score(y_test_fold, y_pred_proba)
+                auc_scores.append(fold_auc)
+            except:
+                auc_scores.append(0.5)  # 默认值
+            
+            # 计算PR AUC (更适合不平衡数据)
+            try:
+                fold_pr_auc = average_precision_score(y_test_fold, y_pred_proba)
+                pr_auc_scores.append(fold_pr_auc)
+            except:
+                pr_auc_scores.append(0.0)  # 默认值
+        
+        # 添加平衡准确率，处理数据不平衡问题
         try:
-            auc_scores = cross_val_score(model, X, y, cv=cv, scoring='roc_auc')
+            balanced_accuracy_scores = cross_val_score(model, X, y, cv=cv, scoring='balanced_accuracy')
         except:
-            auc_scores = [0] * self.cv_folds
+            balanced_accuracy_scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
         
         training_time = time.time() - start_time
         
@@ -175,6 +206,8 @@ class ModelComparator:
             'model': model,
             'accuracy_mean': np.mean(accuracy_scores),
             'accuracy_std': np.std(accuracy_scores),
+            'balanced_accuracy_mean': np.mean(balanced_accuracy_scores),
+            'balanced_accuracy_std': np.std(balanced_accuracy_scores),
             'precision_mean': np.mean(precision_scores),
             'precision_std': np.std(precision_scores),
             'recall_mean': np.mean(recall_scores),
@@ -183,6 +216,8 @@ class ModelComparator:
             'f1_std': np.std(f1_scores),
             'auc_mean': np.mean(auc_scores),
             'auc_std': np.std(auc_scores),
+            'pr_auc_mean': np.mean(pr_auc_scores),
+            'pr_auc_std': np.std(pr_auc_scores),
             'training_time': training_time,
             'params': model_params
         }
@@ -221,20 +256,24 @@ class ModelComparator:
                 comparison_row = {
                     'Model': model_name,
                     'Accuracy': f"{results['accuracy_mean']:.6f} ± {results['accuracy_std']:.6f}",
+                    'Balanced_Acc': f"{results['balanced_accuracy_mean']:.6f} ± {results['balanced_accuracy_std']:.6f}",
                     'Precision': f"{results['precision_mean']:.6f} ± {results['precision_std']:.6f}",
                     'Recall': f"{results['recall_mean']:.6f} ± {results['recall_std']:.6f}",
                     'F1-Score': f"{results['f1_mean']:.6f} ± {results['f1_std']:.6f}",
-                    'AUC': f"{results['auc_mean']:.6f} ± {results['auc_std']:.6f}",
+                    'ROC_AUC': f"{results['auc_mean']:.6f} ± {results['auc_std']:.6f}",
+                    'PR_AUC': f"{results['pr_auc_mean']:.6f} ± {results['pr_auc_std']:.6f}",
                     'Training_Time': f"{results['training_time']:.4f}s"
                 }
                 comparison_data.append(comparison_row)
                 
                 print(f"✓ {model_name} 训练完成")
                 print(f"  准确率: {results['accuracy_mean']:.6f}")
+                print(f"  平衡准确率: {results['balanced_accuracy_mean']:.6f}")
                 print(f"  精确率: {results['precision_mean']:.6f}")
                 print(f"  召回率: {results['recall_mean']:.6f}")
                 print(f"  F1分数: {results['f1_mean']:.6f}")
-                print(f"  AUC: {results['auc_mean']:.6f}")
+                print(f"  ROC AUC: {results['auc_mean']:.6f}")
+                print(f"  PR AUC: {results['pr_auc_mean']:.6f}")
                 print(f"  训练时间: {results['training_time']:.4f}秒")
                 
             except Exception as e:
@@ -444,37 +483,3 @@ class ModelComparator:
             return "\n".join(report)
         
         return "暂无对比结果"
-
-# 测试函数
-def test_model_comparator():
-    """测试模型对比器"""
-    print("测试模型性能对比器...")
-    
-    # 创建模拟数据
-    np.random.seed(42)
-    n_samples = 1000
-    n_features = 15
-    
-    X = np.random.randn(n_samples, n_features)
-    y = np.random.choice([0, 1], n_samples, p=[0.9, 0.1])
-    
-    # 转换为DataFrame
-    feature_names = [f'feature_{i}' for i in range(n_features)]
-    X_df = pd.DataFrame(X, columns=feature_names)
-    y_series = pd.Series(y)
-    
-    # 测试模型对比
-    comparator = ModelComparator(cv_folds=3)
-    
-    # 对比部分模型（为了快速测试）
-    comparison_results = comparator.compare_models(X_df, y_series, 
-                                                 model_names=['XGBoost', 'RandomForest', 'LogisticRegression'])
-    
-    # 生成报告
-    report = comparator.generate_comparison_report()
-    print("\n" + report)
-    
-    print("\n✓ 模型性能对比器测试完成")
-
-if __name__ == "__main__":
-    test_model_comparator()

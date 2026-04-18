@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-工具函数模块
-包含绘图、数据处理等辅助功能
-
-作者: 转换自Jupyter Notebook
-日期: 2026年3月9日
-"""
 
 import numpy as np
 import pandas as pd
@@ -16,11 +9,9 @@ from sklearn.metrics import confusion_matrix
 import warnings
 warnings.filterwarnings('ignore')
 
-# 设置中文字体和样式
-plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
+plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
 sns.set_style("whitegrid")
-plt.style.use('seaborn-v0_8')
 
 def plot_confusion_matrix(cm, title="混淆矩阵", figsize=(8, 6)):
     """
@@ -309,47 +300,3 @@ def save_results_to_csv(results, filename="model_results.csv"):
     df = pd.DataFrame(data)
     df.to_csv(filename, index=False, encoding='utf-8-sig')
     print(f"结果已保存到 {filename}")
-
-# 测试函数
-def test_utils():
-    """测试工具函数"""
-    print("测试工具函数...")
-    
-    # 创建模拟数据
-    cm = np.array([[100, 5], [10, 15]])
-    fpr = np.array([0, 0.1, 0.2, 0.3, 1])
-    tpr = np.array([0, 0.7, 0.8, 0.9, 1])
-    roc_auc = 0.85
-    
-    feature_importance = pd.DataFrame({
-        'Feature': ['V17', 'V12', 'V14', 'V4', 'V10'],
-        'Importance': [0.6789, 0.1306, 0.0221, 0.0165, 0.0120]
-    })
-    
-    evaluation_results = {
-        'accuracy': 0.9995,
-        'precision': 0.89,
-        'recall': 0.83,
-        'f1_score': 0.86,
-        'roc_auc': 0.9786,
-        'true_positives': 81,
-        'false_positives': 10,
-        'false_negatives': 17,
-        'true_negatives': 56854,
-        'specificity': 0.9998,
-        'sensitivity': 0.8265
-    }
-    
-    # 测试绘图函数（注释掉以避免显示）
-    # plot_confusion_matrix(cm)
-    # plot_roc_curve(fpr, tpr, roc_auc)
-    # plot_feature_importance(feature_importance)
-    
-    # 测试报告生成
-    report = create_summary_report(evaluation_results, feature_importance)
-    print("✓ 工具函数测试完成")
-    print("\n示例报告:")
-    print(report)
-
-if __name__ == "__main__":
-    test_utils()

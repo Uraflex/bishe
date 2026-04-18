@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-增强数据处理模块
-实现开题报告要求的混合采样策略和高级特征工程
-
-作者: 基于原版增强
-日期: 2026年3月9日
-"""
 
 import pandas as pd
 import numpy as np
@@ -21,10 +14,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class EnhancedDataProcessor:
-    """增强数据处理器类，实现混合采样和高级特征工程"""
+    """数据处理器：混合采样、特征工程"""
     
     def __init__(self):
-        """初始化增强数据处理器"""
         self.scaler = StandardScaler()
         self.feature_stats = {}
         
@@ -314,6 +306,169 @@ class EnhancedDataProcessor:
         else:
             return X, y
     
+    def preprocess_data_split(self, df, test_size=0.2, use_hybrid_sampling=True, 
+                               use_advanced_features=True, target_ratio=5, random_state=42):
+        """
+        正确的数据预处理流程（避免数据泄露）
+        
+        流程：
+        1. 先做特征工程（全局特征，不涉及统计量泄露）
+        2. 分割训练集和测试集
+        3. 分别对训练集和测试集进行标准化（使用训练集的统计量）
+        4. 只对训练集进行混合采样
+        
+        参数:
+            df (pd.DataFrame): 原始数据集
+            test_size (float): 测试集比例
+            use_hybrid_sampling (bool): 是否使用混合采样
+            use_advanced_features (bool): 是否使用高级特征工程
+            target_ratio (int): 目标正负样本比例
+            random_state (int): 随机种子
+            
+        返回:
+            tuple: (X_train, X_test, y_train, y_test)
+        """
+        if df is None:
+            return None, None, None, None
+        
+        print("开始正确的数据预处理流程（无数据泄露）...")
+        
+        # 1. 异常值检测和处理（在全局做，不影响统计分布）
+        print("\n1. 异常值检测和处理")
+        print("-" * 30)
+        df_cleaned = self.detect_outliers_iqr(df)
+        
+        # 2. 高级特征工程（使用保守模式减少过拟合）
+        if use_advanced_features:
+            print("\n2. 高级特征工程（保守模式，减少过拟合风险）")
+            print("-" * 30)
+            df_enhanced = self.create_advanced_features_v2(df_cleaned, conservative=True)
+        else:
+            df_enhanced = df_cleaned
+        
+        # 3. 分离特征和目标变量
+        print("\n3. 分离特征和目标变量")
+        print("-" * 30)
+        X = df_enhanced.drop('Class', axis=1)
+        y = df_enhanced['Class']
+        
+        print(f"特征数量: {X.shape[1]}")
+        print(f"样本数量: {X.shape[0]}")
+        
+        # 4. 先分割训练集和测试集（关键步骤，防止数据泄露）
+        print("\n4. 分割训练集和测试集")
+        print("-" * 30)
+        from sklearn.model_selection import train_test_split
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=random_state, stratify=y
+        )
+        print(f"训练集大小: {len(X_train)}, 测试集大小: {len(X_test)}")
+        
+        # 5. 特征缩放（只在训练集上fit，然后transform训练集和测试集）
+        print("\n5. 特征缩放（无数据泄露）")
+        print("-" * 30)
+        
+        columns_to_scale = ['Amount', 'Time']
+        existing_columns = [col for col in columns_to_scale if col in X_train.columns]
+        
+        if existing_columns:
+            print(f"使用训练集统计量标准化: {existing_columns}")
+            # 在训练集上fit
+            self.scaler.fit(X_train[existing_columns])
+            # transform训练集和测试集
+            X_train[existing_columns] = self.scaler.transform(X_train[existing_columns])
+            X_test[existing_columns] = self.scaler.transform(X_test[existing_columns])
+            print("✓ 特征缩放完成")
+        
+        # 6. 只对训练集进行混合采样（关键：测试集保持原始分布）
+        if use_hybrid_sampling:
+            print("\n6. 对训练集进行混合采样（测试集保持不变）")
+            print("-" * 30)
+            X_train_resampled, y_train_resampled = self.hybrid_sampling(
+                X_train, y_train, target_ratio, random_state
+            )
+            return X_train_resampled, X_test, y_train_resampled, y_test
+        else:
+            return X_train, X_test, y_train, y_test
+    
+    def create_advanced_features_v2(self, df, conservative=True):
+        """
+        创建高级特征工程（安全版本，避免使用全局统计量）
+        
+        避免使用基于整个数据集的统计量（如mean, std），
+        只创建基于单条记录的特征，防止数据泄露
+        
+        参数:
+            df (pd.DataFrame): 原始数据集
+            conservative (bool): 是否使用保守模式（移除可能过强的V特征统计）
+            
+        返回:
+            pd.DataFrame: 包含新特征的数据集
+        """
+        if conservative:
+            print("开始安全特征工程（保守模式，减少过拟合风险）...")
+        else:
+            print("开始安全特征工程（完整模式）...")
+        
+        df_enhanced = df.copy()
+        
+        # 1. 交易金额特征（基于单条记录，无全局统计）
+        if 'Amount' in df.columns:
+            # 金额分箱特征（使用固定阈值，非数据驱动）
+            df_enhanced['Amount_bin'] = pd.cut(df['Amount'], 
+                                             bins=[0, 10, 50, 100, 500, np.inf],
+                                             labels=[0, 1, 2, 3, 4]).astype(float)
+            
+            # 金额对数变换（单调变换，不改变分布形状）
+            df_enhanced['Amount_log'] = np.log1p(df['Amount'])
+        
+        # 2. 时间序列特征
+        if 'Time' in df.columns:
+            # 时间周期特征
+            df_enhanced['Time_hour'] = (df['Time'] / 3600) % 24
+            df_enhanced['Time_day'] = (df['Time'] / (3600 * 24)) % 7
+            
+            # 时间分箱（固定阈值）
+            df_enhanced['Time_hour_bin'] = pd.cut(df_enhanced['Time_hour'],
+                                                  bins=[0, 6, 12, 18, 24],
+                                                  labels=[0, 1, 2, 3]).astype(float)
+        
+        # 3. V特征统计特征（保守模式下减少统计特征数量）
+        v_features = [col for col in df.columns if col.startswith('V')]
+        if v_features:
+            if conservative:
+                # 保守模式：只保留最基本的统计量，减少过拟合
+                df_enhanced['V_abs_sum'] = df[v_features].abs().sum(axis=1)
+                print(f"  保守模式：仅添加 V_abs_sum（V特征绝对值和）")
+            else:
+                # 完整模式：添加所有V特征统计量
+                df_enhanced['V_mean'] = df[v_features].mean(axis=1)
+                df_enhanced['V_std'] = df[v_features].std(axis=1)
+                df_enhanced['V_max'] = df[v_features].max(axis=1)
+                df_enhanced['V_min'] = df[v_features].min(axis=1)
+                df_enhanced['V_range'] = df_enhanced['V_max'] - df_enhanced['V_min']
+                df_enhanced['V_cv'] = df_enhanced['V_std'] / (df_enhanced['V_mean'].abs() + 1e-8)
+                df_enhanced['V_abs_sum'] = df[v_features].abs().sum(axis=1)
+                df_enhanced['V_positive_count'] = (df[v_features] > 0).sum(axis=1)
+                df_enhanced['V_negative_count'] = (df[v_features] < 0).sum(axis=1)
+                print(f"  完整模式：添加所有V特征统计量")
+        
+        # 4. 交互特征（保守模式下减少交互特征）
+        if 'Amount' in df.columns and v_features:
+            if conservative:
+                # 保守模式：只添加Amount与V1的交互
+                df_enhanced['Amount_V1_interaction'] = df['Amount'] * df['V1']
+                print(f"  保守模式：仅添加 Amount_V1_interaction")
+            else:
+                # 完整模式：添加Amount与前5个V特征的交互
+                for i, v_feat in enumerate(v_features[:5]):
+                    df_enhanced[f'Amount_{v_feat}_interaction'] = df['Amount'] * df[v_feat]
+        
+        print(f"特征工程完成，新增 {len(df_enhanced.columns) - len(df.columns)} 个特征")
+        print(f"总特征数: {len(df_enhanced.columns)}")
+        
+        return df_enhanced
+
     def get_feature_importance_data(self, X):
         """
         获取特征重要性分析数据
@@ -341,41 +496,3 @@ class EnhancedDataProcessor:
             feature_stats.append(stats)
         
         return pd.DataFrame(feature_stats)
-
-# 测试函数
-def test_enhanced_processor():
-    """测试增强数据处理器"""
-    print("测试增强数据处理器...")
-    
-    # 创建测试数据
-    np.random.seed(42)
-    n_samples = 1000
-    test_data = {
-        'Time': np.random.randint(0, 86400, n_samples),
-        'Amount': np.random.exponential(100, n_samples),
-        'V1': np.random.normal(0, 1, n_samples),
-        'V2': np.random.normal(0, 1, n_samples),
-        'V3': np.random.normal(0, 1, n_samples),
-        'Class': np.random.choice([0, 1], n_samples, p=[0.95, 0.05])
-    }
-    
-    df = pd.DataFrame(test_data)
-    
-    # 测试增强处理器
-    processor = EnhancedDataProcessor()
-    
-    # 测试预处理
-    X, y = processor.preprocess_data_enhanced(df, 
-                                             use_hybrid_sampling=True,
-                                             use_advanced_features=True)
-    
-    if X is not None:
-        print(f"✓ 增强数据处理器测试完成")
-        print(f"最终特征矩阵形状: {X.shape}")
-        print(f"最终目标变量形状: {y.shape}")
-        print(f"类别分布: {y.value_counts().to_dict()}")
-    else:
-        print("✗ 测试失败")
-
-if __name__ == "__main__":
-    test_enhanced_processor()

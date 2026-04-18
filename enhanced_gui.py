@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-信用卡欺诈检测系统 - 增强图形化界面
-集成混合采样、超参数优化、模型对比等高级功能
-
-作者: 增强版GUI
-日期: 2026年3月9日
-"""
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import pandas as pd
 import numpy as np
 import matplotlib
-matplotlib.use('TkAgg')  # 设置matplotlib后端
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -22,26 +15,19 @@ import threading
 import os
 from datetime import datetime
 
-# 导入原有模块
 from enhanced_data_processor import EnhancedDataProcessor
 from model_trainer import ModelTrainer
 from evaluator import ModelEvaluator
 from utils import (plot_confusion_matrix, plot_roc_curve, plot_feature_importance,
                    create_summary_report)
-
-# 导入新增模块
 from hyperparameter_optimizer import HybridOptimizer
 from model_comparator import ModelComparator
 
-# 设置中文字体
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
 
 class EnhancedCreditCardFraudGUI:
-    """增强版信用卡欺诈检测GUI主类"""
-    
     def __init__(self, root):
-        """初始化增强GUI"""
         self.root = root
         self.root.title("信用卡欺诈检测系统 - 增强版")
         self.root.geometry("1400x900")
@@ -262,19 +248,37 @@ class EnhancedCreditCardFraudGUI:
                         class_name = "正常交易" if class_label == 0 else "欺诈交易"
                         info_text += f"- {class_name} (Class={class_label}): {count} 条 ({percentage:.4f}%)\n"
                 
-                # 预处理数据
-                self.update_status("正在预处理数据...")
-                X, y = self.processor.preprocess_data_enhanced(df, use_hybrid_sampling=False, use_advanced_features=False)
-                
-                if X is not None and y is not None:
-                    # 分割数据
-                    from sklearn.model_selection import train_test_split
-                    self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-                        X, y, test_size=0.2, random_state=42, stratify=y
+                # 预处理数据（使用正确的无数据泄露流程）
+                self.update_status("正在预处理数据（无数据泄露）...")
+                self.X_train, self.X_test, self.y_train, self.y_test = \
+                    self.processor.preprocess_data_split(
+                        df, 
+                        test_size=0.2,
+                        use_hybrid_sampling=False,  # 基础版本不采样
+                        use_advanced_features=False,  # 基础版本无高级特征
+                        random_state=42
                     )
+                
+                if self.X_train is not None:
+                    # 训练集类别分布
+                    train_class_counts = pd.Series(self.y_train).value_counts().sort_index()
+                    info_text += f"\n基础预处理完成（无数据泄露）！\n"
+                    info_text += "训练集类别分布:\n"
+                    for class_label in train_class_counts.index:
+                        count = train_class_counts[class_label]
+                        class_name = "正常交易" if class_label == 0 else "欺诈交易"
+                        info_text += f"- {class_name} (Class={class_label}): {count} 条\n"
                     
-                    info_text += f"\n基础预处理完成！\n"
-                    info_text += f"训练集大小: {self.X_train.shape}\n"
+                    # 测试集类别分布
+                    test_class_counts = pd.Series(self.y_test).value_counts().sort_index()
+                    info_text += f"\n测试集类别分布:\n"
+                    for class_label in test_class_counts.index:
+                        count = test_class_counts[class_label]
+                        percentage = count / len(self.y_test) * 100
+                        class_name = "正常交易" if class_label == 0 else "欺诈交易"
+                        info_text += f"- {class_name} (Class={class_label}): {count} 条 ({percentage:.2f}%)\n"
+                    
+                    info_text += f"\n训练集大小: {self.X_train.shape}\n"
                     info_text += f"测试集大小: {self.X_test.shape}\n"
                 
                 self.data_info_text.insert(tk.END, info_text)
@@ -291,7 +295,7 @@ class EnhancedCreditCardFraudGUI:
         thread.start()
         
     def enhanced_preprocess(self):
-        """增强数据预处理"""
+        """增强数据预处理（修复数据泄露版本）"""
         if not self.data_file_path.get():
             messagebox.showerror("错误", "请先选择数据文件")
             return
@@ -299,56 +303,67 @@ class EnhancedCreditCardFraudGUI:
         def enhanced_preprocess_thread():
             try:
                 self.start_progress()
-                self.update_status("正在进行增强预处理...")
+                self.update_status("正在进行增强预处理（无数据泄露）...")
                 
                 # 加载数据
                 df = self.enhanced_processor.load_data(self.data_file_path.get())
                 if df is None:
                     return
                 
-                # 增强预处理
-                X_enhanced, y_enhanced = self.enhanced_processor.preprocess_data_enhanced(
-                    df, 
-                    use_hybrid_sampling=True, 
-                    use_advanced_features=True, 
-                    target_ratio=5
-                )
-                
-                if X_enhanced is not None:
-                    # 分割增强数据
-                    from sklearn.model_selection import train_test_split
-                    self.X_train_enhanced, self.X_test_enhanced, self.y_train_enhanced, self.y_test_enhanced = train_test_split(
-                        X_enhanced, y_enhanced, test_size=0.2, random_state=42, stratify=y_enhanced
+                # 使用正确的预处理流程（先分割再处理，防止数据泄露）
+                self.X_train_enhanced, self.X_test_enhanced, self.y_train_enhanced, self.y_test_enhanced = \
+                    self.enhanced_processor.preprocess_data_split(
+                        df, 
+                        test_size=0.2,
+                        use_hybrid_sampling=True, 
+                        use_advanced_features=True, 
+                        target_ratio=5,
+                        random_state=42
                     )
-                    
+                
+                if self.X_train_enhanced is not None:
                     # 显示增强预处理结果
                     self.data_info_text.delete(1.0, tk.END)
                     
-                    info_text = f"增强数据预处理完成！\n"
+                    info_text = f"增强数据预处理完成（无数据泄露）！\n"
                     info_text += f"{'='*50}\n\n"
                     info_text += f"原始数据形状: {df.shape}\n"
-                    info_text += f"增强特征数量: {X_enhanced.shape[1]}\n"
-                    info_text += f"增强样本数量: {X_enhanced.shape[0]}\n\n"
+                    info_text += f"增强特征数量: {self.X_train_enhanced.shape[1]}\n\n"
                     
-                    # 类别分布
-                    class_counts = pd.Series(y_enhanced).value_counts()
-                    info_text += "增强后类别分布:\n"
-                    for class_label in class_counts.index:
-                        count = class_counts[class_label]
+                    # 训练集类别分布（采样后）
+                    train_class_counts = pd.Series(self.y_train_enhanced).value_counts().sort_index()
+                    info_text += "训练集类别分布（混合采样后）:\n"
+                    for class_label in train_class_counts.index:
+                        count = train_class_counts[class_label]
                         class_name = "正常交易" if class_label == 0 else "欺诈交易"
                         info_text += f"- {class_name} (Class={class_label}): {count} 条\n"
+                    
+                    # 测试集类别分布（原始分布）
+                    test_class_counts = pd.Series(self.y_test_enhanced).value_counts().sort_index()
+                    info_text += f"\n测试集类别分布（原始分布，未采样）:\n"
+                    for class_label in test_class_counts.index:
+                        count = test_class_counts[class_label]
+                        percentage = count / len(self.y_test_enhanced) * 100
+                        class_name = "正常交易" if class_label == 0 else "欺诈交易"
+                        info_text += f"- {class_name} (Class={class_label}): {count} 条 ({percentage:.2f}%)\n"
                     
                     info_text += f"\n增强训练集大小: {self.X_train_enhanced.shape}\n"
                     info_text += f"增强测试集大小: {self.X_test_enhanced.shape}\n"
                     
                     # 特征统计
-                    feature_stats = self.enhanced_processor.get_feature_importance_data(X_enhanced)
-                    info_text += f"\n新增特征类型统计:\n"
+                    feature_stats = self.enhanced_processor.get_feature_importance_data(self.X_train_enhanced)
+                    info_text += f"\n特征类型统计:\n"
                     info_text += f"数值特征: {len(feature_stats[feature_stats['Data_Type'] == 'float64'])}\n"
                     info_text += f"整数特征: {len(feature_stats[feature_stats['Data_Type'] == 'int64'])}\n"
                     
+                    info_text += f"\n✓ 关键改进：\n"
+                    info_text += f"- 先分割数据再处理，避免数据泄露\n"
+                    info_text += f"- 标准化使用训练集统计量\n"
+                    info_text += f"- 混合采样只在训练集上进行\n"
+                    info_text += f"- 测试集保持原始分布，评估更真实\n"
+                    
                     self.data_info_text.insert(tk.END, info_text)
-                    self.update_status("增强预处理完成")
+                    self.update_status("增强预处理完成（无数据泄露）")
                 
             except Exception as e:
                 messagebox.showerror("错误", f"增强预处理失败: {str(e)}")
