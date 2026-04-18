@@ -17,8 +17,9 @@
 
 ```
 credit_card_fraud_detection/
-├── main.py                      # 程序入口
-├── enhanced_gui.py              # GUI界面
+├── main.py                      # 程序入口 (启动器)
+├── launcher.py                  # GUI启动器
+├── enhanced_gui.py              # GUI主界面
 ├── enhanced_data_processor.py   # 数据处理模块
 ├── model_trainer.py             # 模型训练模块
 ├── evaluator.py                 # 模型评估模块
@@ -26,12 +27,62 @@ credit_card_fraud_detection/
 ├── hyperparameter_optimizer.py  # 超参数优化模块
 ├── model_comparator.py          # 模型对比模块
 ├── xgboost_optimizer.py         # XGBoost参数优化器
+├── cli.py                       # 命令行界面 (CLI)
 ├── requirements.txt              # 依赖包列表
 └── README.md                    # 项目说明文档
 ```
 
-## GUI界面功能
+## 4.3.1 命令行界面（CLI）设计
 
+针对技术人员的批量实验需求，设计参数化CLI调用方式。
+
+### CLI命令行调用参数说明
+
+| 参数名称 | 简写 | 示例值 | 功能说明 |
+|----------|------|--------|----------|
+| --data_path | -d | ./data/credit.csv | 指定数据集路径 |
+| --sample_ratio | -r | 3.3 | 设置混合采样目标比例 |
+| --train | -t | / | 触发模型训练流程 |
+| --tune | -u | / | 触发超参数调优（需配合-t） |
+| --save_model | -s | ./model/best_model.pkl | 指定模型保存路径 |
+| --output | -o | ./result/ | 指定实验结果输出目录 |
+
+### CLI使用示例
+
+```bash
+# 1. 基础训练
+python cli.py -d ./data/creditcard.csv -t
+
+# 2. 训练 + 超参数调优
+python cli.py -d ./data/creditcard.csv -t -u
+
+# 3. 完整流程（指定采样比例、保存模型、输出目录）
+python cli.py -d ./data/creditcard.csv -t -u -r 3.3 -s ./model/best_model.pkl -o ./result/
+
+# 4. 查看帮助
+python cli.py -h
+```
+
+### 可选参数
+
+| 参数名称 | 默认值 | 说明 |
+|----------|--------|------|
+| --random_state | 42 | 随机种子 |
+| --test_size | 0.2 | 测试集比例 |
+| --cv_folds | 5 | 交叉验证折数 |
+
+### CLI输出结果
+
+- **评估结果**: `evaluation_results_YYYYMMDD_HHMMSS.json`
+- **特征重要性**: `feature_importance_YYYYMMDD_HHMMSS.csv`
+- **训练配置**: `training_config_YYYYMMDD_HHMMSS.json`
+- **训练好的模型**: 用户指定的 `.pkl` 文件
+
+## 启动器界面
+
+启动器提供两种运行模式选择：
+
+### GUI 界面
 - 数据文件选择：支持CSV数据文件
 - 基础/增强预处理：两种预处理模式
 - 模型训练：XGBoost模型一键训练
@@ -39,6 +90,12 @@ credit_card_fraud_detection/
 - 模型对比：多算法性能对比
 - 结果可视化：混淆矩阵、ROC曲线、特征重要性
 - 模型保存：导出训练好的模型
+
+### CLI 界面
+- 参数化命令行调用
+- 支持批量实验
+- 自动化脚本执行
+- 快速帮助提示
 
 ## 快速开始
 
@@ -51,8 +108,20 @@ pip install -r requirements.txt
 ### 运行程序
 
 ```bash
-# GUI版本
 python main.py
+```
+
+运行后会弹出**启动器界面**，提供两种模式选择：
+- **GUI界面**：图形化操作界面，适合数据分析和可视化展示
+- **CLI界面**：命令行界面，适合批量实验和自动化脚本
+
+也可直接运行特定模式：
+```bash
+# 直接启动GUI
+python enhanced_gui.py
+
+# 直接启动CLI
+python cli.py -d ./data/creditcard.csv -t
 ```
 
 ## 核心模块
