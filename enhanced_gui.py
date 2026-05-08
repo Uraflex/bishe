@@ -30,7 +30,7 @@ class EnhancedCreditCardFraudGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("信用卡欺诈检测系统 - 增强版")
-        self.root.geometry("1400x900")
+        self.root.geometry("1200x750")
         
         # 设置样式
         self.style = ttk.Style()
@@ -79,11 +79,11 @@ class EnhancedCreditCardFraudGUI:
         title_label.grid(row=0, column=0, columnspan=3, pady=10)
         
         # 左侧控制面板
-        control_frame = ttk.LabelFrame(main_frame, text="控制面板", padding="10")
+        control_frame = ttk.LabelFrame(main_frame, text="控制面板", padding="8")
         control_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=5)
         
         # 数据加载部分
-        data_frame = ttk.LabelFrame(control_frame, text="数据模块", padding="5")
+        data_frame = ttk.LabelFrame(control_frame, text="数据模块", padding="4")
         data_frame.pack(fill=tk.X, pady=5)
         
         ttk.Entry(data_frame, textvariable=self.data_file_path, width=35).pack(side=tk.LEFT, padx=5)
@@ -91,22 +91,23 @@ class EnhancedCreditCardFraudGUI:
         ttk.Button(data_frame, text="加载数据", command=self.load_data).pack(side=tk.LEFT, padx=2)
         
         # 模型模块
-        model_frame = ttk.LabelFrame(control_frame, text="模型模块", padding="5")
-        model_frame.pack(fill=tk.X, pady=5)
+        model_frame = ttk.LabelFrame(control_frame, text="模型模块", padding="4")
+        model_frame.pack(fill=tk.X, pady=3)
         
-        ttk.Button(model_frame, text="训练模型 (XGBoost)", command=self.train_enhanced_model).pack(fill=tk.X, pady=2)
-        ttk.Button(model_frame, text="模型评估", command=self.evaluate_model).pack(fill=tk.X, pady=2)
-        ttk.Button(model_frame, text="性能对比", command=self.compare_models).pack(fill=tk.X, pady=2)
-        ttk.Button(model_frame, text="模型导出", command=self.save_model).pack(fill=tk.X, pady=2)
+        ttk.Button(model_frame, text="训练模型 (XGBoost)", command=self.train_enhanced_model).pack(fill=tk.X, pady=1)
+        ttk.Button(model_frame, text="模型评估", command=self.evaluate_model).pack(fill=tk.X, pady=1)
+        ttk.Button(model_frame, text="性能对比", command=self.compare_models).pack(fill=tk.X, pady=1)
+        ttk.Button(model_frame, text="模型导出", command=self.save_model).pack(fill=tk.X, pady=1)
         
         # 结果模块
-        result_frame = ttk.LabelFrame(control_frame, text="结果模块", padding="5")
-        result_frame.pack(fill=tk.X, pady=5)
+        result_frame = ttk.LabelFrame(control_frame, text="结果模块", padding="4")
+        result_frame.pack(fill=tk.X, pady=3)
         
-        ttk.Button(result_frame, text="可视化分析", command=self.show_visualization_menu).pack(fill=tk.X, pady=2)
-        ttk.Button(result_frame, text="特征重要性", command=self.plot_feature_importance).pack(fill=tk.X, pady=2)
-        ttk.Button(result_frame, text="对比结果图表", command=self.plot_comparison_results).pack(fill=tk.X, pady=2)
-        ttk.Button(result_frame, text="导出结果", command=self.export_results).pack(fill=tk.X, pady=2)
+        ttk.Button(result_frame, text="可视化分析", command=self.show_visualization_menu).pack(fill=tk.X, pady=1)
+        ttk.Button(result_frame, text="特征重要性", command=self.plot_feature_importance).pack(fill=tk.X, pady=1)
+        ttk.Button(result_frame, text="消融实验", command=self.ablation_study).pack(fill=tk.X, pady=1)
+        ttk.Button(result_frame, text="对比结果图表", command=self.plot_comparison_results).pack(fill=tk.X, pady=1)
+        ttk.Button(result_frame, text="导出结果", command=self.export_results).pack(fill=tk.X, pady=1)
         
         # 进度条
         self.progress = ttk.Progressbar(control_frame, mode='indeterminate')

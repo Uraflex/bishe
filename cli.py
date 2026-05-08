@@ -44,7 +44,7 @@ def create_parser():
         '-d', '--data_path',
         type=str,
         required=True,
-        help='指定数据集路径 (示例: ./data/credit.csv)'
+        help='指定数据集路径 (示例: ../creditcard.csv)'
     )
     
     # 混合采样目标比例
